@@ -1,0 +1,91 @@
+app:
+  version: 1.0.0
+  failed-job-retrigger-delay-in-mins: 15
+  topicTriggerNewsLetter: newsletter
+spring:
+  application:
+    name: schedulerservice
+  datasource:
+    url: jdbc:mysql://db:3306/${spring.application.name}
+    username: root
+    password: root
+    driver-class-name: org.mariadb.jdbc.Driver
+    hikari:
+      pool-name: ${spring.application.name} connection pool
+      maximumPoolSize: 16
+      idleTimeout: 300000
+      minimumIdle: 0
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL5Dialect
+    properties:
+      hibernate:
+        ddl-auto: none
+        id:
+          new_generator_mappings: false
+  flyway:
+    schemas: ${spring.application.name}
+    table: schema_history
+    connect-retries: 30
+    baseline-on-migrate: true
+    sql-migration-suffixes: .sql
+  quartz:
+    job-store-type: jdbc
+
+server:
+  port: 4202
+  compression:
+    enabled: true
+    min-response-size: 4096
+    mime-types: application/json
+kafka:
+  bootstrap:
+    servers: kafka:9092
+  key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  topics:
+    newsletter: newsletter
+logging:
+  level:
+    io:
+      swagger:
+        models:
+          parameters:
+            AbstractSerializableParameter: error
+quartz:
+  config-filename:
+    quartz.properties
+---
+spring:
+  profiles: test
+---
+spring:
+  profiles: dev
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  datasource:
+    url: jdbc:mysql://localhost:3306/${spring.application.name}?createDatabaseIfNotExist=true
+kafka:
+  bootstrap:
+    servers: localhost:9092
+#    url: jdbc:h2:mem:${spring.application.name}
+#    username: root
+#    password: root
+#    driver-class-name: org.h2.Driver
+#  jpa:
+#    database-platform: org.hibernate.dialect.H2Dialect
+#    defer-datasource-initialization: true
+#  h2:
+#    console:
+#      enabled: true
+log4j:
+  logger:
+    org.springframework: DEBUG
+    com.saurer: DEBUG
+logging:
+  level:
+    org:
+      hibernate:
+        type: DEBUG
