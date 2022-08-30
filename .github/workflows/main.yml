@@ -1,0 +1,39 @@
+name: Build and Push docker image to docket hub
+on:
+  push:
+    branches:
+      - master
+env:
+  DOCKER_IMAGE: santhoshas1990/scheduler-service
+  TAG: latest
+
+jobs:
+  setup-build-pipeline:
+    name: Setting up build pipeline
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v2
+
+      - name: Code setup
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.11
+          server-id: github
+          settings-path: ${{ github.workspace }}
+
+      - name: Package
+        run: mvn clean package -DskipTests
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_SECRET }}
+      - name: Docker build
+        run: |
+          docker build -t $DOCKER_IMAGE:$TAG .
+      - name: Docker push
+        run: |
+          docker push $DOCKER_IMAGE:$TAG
